@@ -57,10 +57,6 @@ public class BeforeAll
       return;
     }
 
-
-
-
-
     string file;
     Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     var enc = Encoding.UTF8;
@@ -213,7 +209,7 @@ public class BeforeAll
     if ((s[i - 1] == '\n' || s[i - 1] == 0x1a) && i >= 0)
     {
       i = i - 1;
-      while (s[i - 1] == '\n' && i >= 0)
+      while ((s[i - 1] == '\n' || s[i - 1] == 0x1a) && i >= 0)
         i = i - 1;
     }
     else
