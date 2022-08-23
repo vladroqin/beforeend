@@ -31,20 +31,51 @@ public class BeforeAll
 
   private static void Main(string[] args)
   {
-    if (args.Length == 0 || String.IsNullOrWhiteSpace(args[0]) ||
-      (args.Length == 2 && args[0][0] != '-'))
+    string file, newfile;
+    Encoding enc;
+    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+    if (args.Length == 0)
     {
       Console.WriteLine(HELP);
       return;
     }
-    if (args.Length == 1 && !File.Exists(args[0]))
+    else if (args.Length == 1)
     {
-      Console.WriteLine($"Файл \"{args[0]}\" не существует!");
+      file = args[0];
+      newfile = GetNewFile(file);
+      enc = Encoding.UTF8;
+    }
+    else if (args.Length == 2)
+    {
+      if (args[0].StartsWith("-"))
+      {
+        file = args[1];
+        newfile = GetNewFile(file);
+        enc = ProcessParams(args[0]);
+      }
+      else
+      {
+        file = args[0];
+        newfile = args[1];
+        enc = Encoding.UTF8;
+      }
+    }
+    else
+    {
+      file = args[1];
+      newfile = args[2];
+      enc = ProcessParams(args[0]);
+    }
+
+    if (!File.Exists(file))
+    {
+      Console.WriteLine($"Файл \"{file}\" не существует!");
       return;
     }
-    if (args.Length != 1 && !File.Exists(args[1]))
+    if (File.Exists(newfile))
     {
-      Console.WriteLine($"Файл \"{args[1]}\" не существует!");
+      Console.WriteLine($"Файл \"{newfile}\" уже существует!");
       return;
     }
 
@@ -57,37 +88,6 @@ public class BeforeAll
       return;
     }
 
-    string file;
-    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-    var enc = Encoding.UTF8;
-
-    if (args.Length == 2)
-    {
-      file = args[1];
-      if (args[0].Contains('h'))
-        _isHtml = true;
-      if (args[0].Contains('m'))
-        _isMultyGraphs = true;
-      if (args[0].Contains('s'))
-        _isSuperSubScript = true;
-
-      if (args[0].Contains('W'))
-        enc = Encoding.GetEncoding(1252);
-      if (args[0].Contains('w'))
-        enc = Encoding.GetEncoding(1251);
-      if (args[0].Contains('D'))
-        enc = Encoding.GetEncoding(437);
-      if (args[0].Contains('d'))
-        enc = Encoding.GetEncoding(866);
-      if (args[0].Contains('k'))
-        enc = Encoding.GetEncoding(20866);
-    }
-    else
-      file = args[0];
-
-    var filename = Path.GetFileNameWithoutExtension(file);
-    var ext = Path.GetExtension(file);
-    var newfile = $"{filename}-NEW{ext}";
     var warn = new Warnings(file);
     var text = File.ReadAllText(file, enc);
 
@@ -216,5 +216,47 @@ public class BeforeAll
       return s;
 
     return s.Substring(0, i);
+  }
+
+  /// <summary>
+  /// Обработать параметры
+  /// </summary>
+  /// <param name="s">Строка с параметрами</param>
+  /// <returns>Кодировка</returns>
+  private static Encoding ProcessParams(string s)
+  {
+    Encoding result = Encoding.UTF8; ;
+    if (s.Contains('h'))
+      _isHtml = true;
+    if (s.Contains('m'))
+      _isMultyGraphs = true;
+    if (s.Contains('s'))
+      _isSuperSubScript = true;
+
+    if (s.Contains('W'))
+      result = Encoding.GetEncoding(1252);
+    if (s.Contains('w'))
+      result = Encoding.GetEncoding(1251);
+    if (s.Contains('D'))
+      result = Encoding.GetEncoding(437);
+    if (s.Contains('d'))
+      result = Encoding.GetEncoding(866);
+    if (s.Contains('k'))
+      result = Encoding.GetEncoding(20866);
+
+    return result;
+  }
+
+  /// <summary>
+  /// Получить новое имя файла
+  /// </summary>
+  /// <param name="s">Имя файла</param>
+  /// <returns>Новое имя файла</returns>
+  private static string GetNewFile(string s)
+  {
+    var filename = Path.GetFileNameWithoutExtension(s);
+    var ext = Path.GetExtension(s);
+    var result = $"{filename}-NEW{ext}";
+    return result;
   }
 }
